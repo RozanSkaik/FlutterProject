@@ -1,8 +1,8 @@
 import 'dart:io';
-
 import 'package:e_commerce_app/Data/database_helper.dart';
 import 'package:e_commerce_app/Model/product.dart';
 import 'package:e_commerce_app/Utilis/utility.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,6 +18,7 @@ class AddProduct extends StatefulWidget {
 }
 
 class AddProductState extends State<AddProduct> {
+  Firestore fb = Firestore.instance;
   Future<File> imageFile;
   var product;
   Image image;
