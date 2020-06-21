@@ -116,40 +116,43 @@ class HomeState extends State<Home>{
     final double itemWidth = size.width / 2;
 
     // TODO: implement build
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Home"),
-        elevation: 0.0,
-        actions: <Widget>[
-          Stack(
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: InkResponse(
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>Cart()));
-                  },
-                  child: Icon(Icons.shopping_cart),
+    return ScopedModel<AppModel>(
+          model: AppModel() ,
+          child: Scaffold(
+        appBar: AppBar(
+          title: Text("Home"),
+          elevation: 0.0,
+          actions: <Widget>[
+            Stack(
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: InkResponse(
+                    onTap: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>Cart()));
+                    },
+                    child: Icon(Icons.shopping_cart),
+                  ),
                 ),
-              ),
-              Positioned(
-                child: ScopedModelDescendant<AppModel>(
-                  builder: (context,child,model){
-                    return Container(
-                      child: Text((model.cartListing.length > 0) ? model.cartListing.length.toString() : "",textAlign: TextAlign.center,style: TextStyle(color: Colors.orangeAccent,fontWeight: FontWeight.bold),),
-                    );
-                  },
-                ),
-              )
-            ],
-          )
-        ],
-      ),
-      body:ScopedModelDescendant<AppModel>(
-          builder: (context,child,model){
-            return
-              GridGenerate(model.itemListing,(itemWidth / itemHeight));
-          }
+                Positioned(
+                  child: ScopedModelDescendant<AppModel>(
+                    builder: (context,child,model){
+                      return Container(
+                        child: Text((model.cartListing.length > 0) ? model.cartListing.length.toString() : "",textAlign: TextAlign.center,style: TextStyle(color: Colors.orangeAccent,fontWeight: FontWeight.bold),),
+                      );
+                    },
+                  ),
+                )
+              ],
+            )
+          ],
+        ),
+        body:ScopedModelDescendant<AppModel>(
+            builder: (context,child,model){
+              return
+                GridGenerate(model.itemListing,(itemWidth / itemHeight));
+            }
+        ),
       ),
     );
   }

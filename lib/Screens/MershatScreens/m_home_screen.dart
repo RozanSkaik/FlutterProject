@@ -1,14 +1,17 @@
+import 'package:e_commerce_app/Core/ViewModels/CRUDModel.dart';
 import 'package:e_commerce_app/Data/database_helper.dart';
 import 'package:e_commerce_app/Screens/MershatScreens/orders_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'add_product.dart';
 
 class MershantHomeScreen extends StatelessWidget{
-  var db= DatabaseHelper();
+  //var db= DatabaseHelper();
   @override
   Widget build(BuildContext context) {
+   // final productsProvider = Provider.of<CURDModel>(context);
     // TODO: implement build
     return Scaffold(
       body: init(context),
@@ -72,7 +75,7 @@ class MershantHomeScreen extends StatelessWidget{
           child: RaisedButton(
 
             onPressed: () {
-              db.saveOrders();
+             // db.saveOrders();
               Navigator.push(context, MaterialPageRoute(builder: (context) => OrderScreen()));
             }, // When Click on Button goto Login Screen
 

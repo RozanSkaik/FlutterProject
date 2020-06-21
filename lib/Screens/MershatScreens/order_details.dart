@@ -1,3 +1,4 @@
+import 'package:e_commerce_app/Core/ViewModels/CRUDModel.dart';
 import 'package:e_commerce_app/Data/database_helper.dart';
 import 'package:e_commerce_app/Model/order_cart.dart';
 import 'package:e_commerce_app/Model/order_data.dart';
@@ -23,9 +24,11 @@ class OrderDetails extends StatelessWidget {
 class Order extends StatelessWidget {
   int index;
   Order({Key key,this.index}) : super(key: key);
-  var db = new DatabaseHelper();
+  //var db = new DatabaseHelper();
+  
   @override
   Widget build(BuildContext context) {
+    final ordersProvider = Provider.of<CURDModel>(context);
     int number = Provider.of<OrderCart>(context).orderCount;
     return Scaffold(
         body: SingleChildScrollView(
@@ -85,7 +88,7 @@ class Order extends StatelessWidget {
         Container(
             margin: EdgeInsets.only(top: 5.0, left: 30.0, right: 30.0),
             child: FutureBuilder(
-                future: db.getAllRecords(),
+                future: ordersProvider.fetchOrders(),//db.getAllRecords()
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     return Container(
@@ -111,7 +114,7 @@ class Order extends StatelessWidget {
         Container(
             margin: EdgeInsets.only(top: 5.0, left: 30.0, right: 30.0),
             child: FutureBuilder(
-                future: db.getAllRecords(),
+                future: ordersProvider.fetchOrders(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     return Container(
@@ -137,7 +140,7 @@ class Order extends StatelessWidget {
         Container(
             margin: EdgeInsets.only(top: 5.0, left: 30.0, right: 30.0),
             child: FutureBuilder(
-                future: db.getAllRecords(),
+                future: ordersProvider.fetchOrders(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     return Container(

@@ -1,4 +1,5 @@
 class User {
+  String id;
   String _name;
   String _username;
   String _password;
@@ -7,6 +8,21 @@ class User {
 
   
   User(this._name, this._username, this._password,this._flaglogged,this._type );
+
+  User.fromJson(Map<String,dynamic> map, String id):this.id = id ?? ''
+  ,this._name = map['name'],
+    this._username = map['email'],
+    this._password = map['password'],
+    this._type = map['type'];
+  toJson(){
+    return{
+      'id':id,
+      'name':_name,
+      'email':_username,
+      'password':_password,
+      'type':_type,
+    };
+  }
 
   User.map(dynamic obj) {
     this._name = obj['name'];

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:e_commerce_app/Core/ViewModels/CRUDModel.dart';
 import 'package:e_commerce_app/Data/database_helper.dart';
 import 'package:e_commerce_app/Model/product.dart';
 import 'package:e_commerce_app/Utilis/utility.dart';
@@ -6,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'm_home_screen.dart';
@@ -23,15 +25,26 @@ class AddProductState extends State<AddProduct> {
   var product;
   Image image;
   File _image;
-  DatabaseHelper dbHelper;
+  var bytes;
+  Image imageMe;
+  String path;
+  //DatabaseHelper dbHelper;
   List<Product> images;
   String imgString;
 
   Future getImage() async {
-    ImagePicker.pickImage(source: ImageSource.gallery).then((imgFile) {
-      imgString = Utility.base64String(imgFile.readAsBytesSync());
-      _showSnackBar("Image Selected");
+    final File image = await ImagePicker.pickImage(source: ImageSource.gallery);
+  
+    path = await image.path;
+     bytes = image.readAsBytesSync();
+     imageMe = Image.memory(bytes);
+    setState(() {
+      _image = image;
     });
+    // ImagePicker.pickImage(source: ImageSource.gallery).then((imgFile) {
+    //   imgString = Utility.base64String(imgFile.readAsBytesSync());
+    //   _showSnackBar("Image Selected");
+    // });
   }
 
   BuildContext _ctx;
@@ -63,14 +76,15 @@ class AddProductState extends State<AddProduct> {
       return 'Description Required !!';
     }
   }
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
     return ChangeNotifierProvider<Product>(
-          create: (BuildContext context) { 
-            return Product(_name,_price,_category,_description,imgString);
-           },
-          child: Scaffold(
+      create: (BuildContext context) {
+        return Product(_name, _price, _category, _description, imgString);
+      },
+      child: Scaffold(
         key: scaffoldKey,
         body: SingleChildScrollView(
           child: initScreen(context),
@@ -80,6 +94,7 @@ class AddProductState extends State<AddProduct> {
   }
 
   initScreen(BuildContext context) {
+    final productsProvider = Provider.of<CURDModel>(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -165,16 +180,15 @@ class AddProductState extends State<AddProduct> {
                   keyboardType: TextInputType.text,
                 ),
               ),
-              // Padding(
-              //   padding: const EdgeInsets.all(20.0),
-              //   child: Center(
-              //     child: imageFile == null
-              //         ? Text('No image selected.')
-              //         : Flexible(
-              //             child: _image,
-              //           ),
-              //   ),
-              // ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Center(
+                  child: _image == null
+                      ? Text('No image selected.')
+                      :  new Image.memory(bytes),
+          
+                ),
+              ),
 
               Center(
                   child: Container(
@@ -216,9 +230,11 @@ class AddProductState extends State<AddProduct> {
                       margin: EdgeInsets.only(top: 20.0),
                       child: RaisedButton(
                         onPressed: () {
-                          _submit();
-                        }, 
-
+                        //  _submit();
+                          product = new Product(_name, _price, _category, _description, path);
+                          productsProvider.addProduct(product);
+                          
+                        },
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(80.0)),
                         padding: const EdgeInsets.all(0.0),
@@ -269,11 +285,19 @@ class AddProductState extends State<AddProduct> {
       setState(() {
         _isLoading = true;
         form.save();
-        product =
-            new Product(_name, _price, _category, _description, imgString);
-        print(product.name + "*******");
-        var db = new DatabaseHelper();
-        db.saveProduct(product);
+        // fb.collection("Products").add({
+        //   'name': _name,
+        //   'price': _price,
+        //   'category': _category,
+        //   'description': _description,
+        //   'imgString': 'imgString'
+        // });
+
+        // product =
+        //     new Product(_name, _price, _category, _description, imgString);
+        // print(product.name + "*******");
+        // var db = new DatabaseHelper();
+        // db.saveProduct(product);
         _isLoading = false;
         _showSnackBar(product.name + " Added Successfully !");
       });

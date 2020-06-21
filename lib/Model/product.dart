@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 class Product extends ChangeNotifier{
+  String id;
   String _name;
   String _price;
   String _category;
@@ -10,6 +11,22 @@ class Product extends ChangeNotifier{
 
   Product(this._name, this._price, this._category,this._description,this._image );
 
+  Product.fromJson(Map<String,dynamic> map, String id):this.id = id ?? ''
+  ,this._name = map['name'],
+    this._price = map['price'],
+    this._category = map['category'],
+    this._description = map['description'],
+    this._image = map['image'];
+  toJson(){
+    return{
+      'id':id,
+      'name':_name,
+      'price':_price,
+      'category':_category,
+      'description':_description,
+      'image':_image
+    };
+  }
   Product.map(dynamic obj) {
     this._name = obj['name'];
     this._price = obj['price'];
@@ -17,6 +34,7 @@ class Product extends ChangeNotifier{
     this._description = obj['description'];
     this._image = obj['image'];
   }
+
 
   String get name => _name;
   String get price => _price;

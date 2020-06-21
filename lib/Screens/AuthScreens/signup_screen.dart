@@ -1,9 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:e_commerce_app/Core/ViewModels/CRUDModel.dart';
 import 'package:e_commerce_app/Data/database_helper.dart';
 import 'package:e_commerce_app/Model/user.dart';
+import 'package:e_commerce_app/Screens/AuthScreens/authentication.dart';
 import 'package:e_commerce_app/Screens/AuthScreens/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class SignUpScreen extends StatefulWidget {
+  BaseAuth auth = new Auth();
   @override
   _RegisterPageState createState() => new _RegisterPageState();
 }
@@ -51,7 +58,10 @@ class _RegisterPageState  extends State<SignUpScreen> {
             margin: EdgeInsets.only(top: 30.0),
             child: RaisedButton(
               onPressed: () {
-                _submit();
+               // _submit();
+               validateAndSubmit();
+               //  widget.auth.signUp(_name, _email, _password, _type);
+                
               }, // When Click on Button goto Login Screen
 
               shape: RoundedRectangleBorder(
@@ -189,6 +199,66 @@ class _RegisterPageState  extends State<SignUpScreen> {
     ));
   }
 
+    String _errorMessage;
+  bool _isLoginForm;
+
+  bool validateAndSave() {
+    final form = formKey.currentState;
+    if (form.validate()) {
+      form.save();
+      return true;
+    }
+    return false;
+  }
+
+  void validateAndSubmit() async {
+    setState(() {
+      _errorMessage = "";
+      _isLoading = true;
+    });
+    if (validateAndSave()) {
+      try {
+      AuthResult result = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _email, password: _password);
+
+      FirebaseUser user = result.user;
+      Firestore.instance
+          .collection('users')
+          .document(user.uid)
+          .setData({'id': user.uid, 'name': _name, 'type': _type});
+    } catch (signUpError) {
+      if (signUpError is PlatformException) {
+        if (signUpError.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
+         _showDialog('ERROR_EMAIL_ALREADY_IN_USE');
+        }
+      }
+    }
+      
+      }
+    }
+
+
+  @override
+  void initState() {
+    _errorMessage = "";
+    _isLoading = false;
+    _isLoginForm = true;
+    super.initState();
+  }
+
+  void resetForm() {
+    formKey.currentState.reset();
+    _errorMessage = "";
+  }
+
+  void toggleFormMode() {
+    resetForm();
+    setState(() {
+      _isLoginForm = !_isLoginForm;
+    });
+  }
+
+
   void _submit(){
     final form = formKey.currentState;
 
@@ -196,13 +266,37 @@ class _RegisterPageState  extends State<SignUpScreen> {
       setState(() {
         _isLoading = true;
         form.save();
-        var user = new User(_name, _email, _password, null,_type);
-        print(user.type+"*******");
-        var db = new DatabaseHelper();
-        db.saveUser(user);
         _isLoading = false;
+        try{
+         widget.auth.signUp(_name, _email, _password, _type);
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginScreen()));
+
+        }catch (e) {
+          _showDialog('Error: $e');
+        }
       });
     }
+  }
+   void _showDialog(String message) {
+    // flutter defined function
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Error"),
+          content: new Text(message),
+          actions: <Widget>[
+            // usually buttons at the bottom of the dialog
+            new FlatButton(
+              child: new Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

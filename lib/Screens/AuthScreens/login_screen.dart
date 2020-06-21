@@ -1,31 +1,128 @@
+import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:e_commerce_app/Core/Services/Api.dart';
+import 'package:e_commerce_app/Core/ViewModels/CRUDModel.dart';
+import 'package:e_commerce_app/Core/locater.dart';
 import 'package:e_commerce_app/Data/database_helper.dart';
+import 'package:e_commerce_app/Model/Error.dart';
 import 'package:e_commerce_app/Model/user.dart';
+import 'package:e_commerce_app/Screens/AuthScreens/authentication.dart';
 import 'package:e_commerce_app/Screens/AuthScreens/signup_screen.dart';
 import 'package:e_commerce_app/Screens/ClientScreen/Home.dart';
 import 'package:e_commerce_app/Screens/MershatScreens/m_home_screen.dart';
 import 'package:e_commerce_app/Screens/auth_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'login_response.dart';
 
 class LoginScreen extends StatefulWidget {
+  BaseAuth auth = new Auth();
+  VoidCallback logoutCallback;
+  String userId;
   @override
   _LoginPageState createState() => new _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginScreen> implements LoginPageContract {
+class _LoginPageState extends State<LoginScreen> {
   BuildContext _ctx;
   bool _isLoading = false;
   final formKey = new GlobalKey<FormState>();
+
   final scaffoldKey = new GlobalKey<ScaffoldState>();
 
-  String _email, _password,_type;
+  String _email, _password, _type;
+  String _errorMessage;
+  bool _isLoginForm;
 
-  LoginPagePresenter _presenter;
-
-  _LoginPageState() {
-    _presenter = new LoginPagePresenter(this);
+  bool validateAndSave() {
+    final form = formKey.currentState;
+    if (form.validate()) {
+      form.save();
+      return true;
+    }
+    return false;
   }
+
+  void validateAndSubmit() async {
+    setState(() {
+      _errorMessage = "";
+      _isLoading = true;
+    });
+    if (validateAndSave()) {
+      String userId = "";
+      try {
+        if (_isLoginForm) {
+          userId = await widget.auth.signIn(_email, _password);
+          print('Signed in: $userId');
+
+          //widget.auth.getType();
+        }
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (userId.length > 0 && userId != null && _isLoginForm) {
+          //userProvider.signIn(_email, _password);
+          var firebaseUser = await FirebaseAuth.instance.currentUser();
+          DocumentReference documentReference = Firestore.instance
+              .collection("users")
+              .document(firebaseUser.uid);
+          documentReference.get().then((datasnapshot) {
+            if (datasnapshot.exists) {
+              if (datasnapshot.data['type'].toString() == "merchant") {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => MershantHomeScreen()));
+              } else if (datasnapshot.data['type'].toString() == "client") {
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (context) => Home()));
+              }
+            } else {
+              print("No such user");
+            }
+          });
+
+          //widget.loginCallback();
+        }
+      } catch (e) {
+        _showDialog('Error: $e');
+        print('Error: $e');
+        setState(() {
+          _isLoading = false;
+          //_errorMessage = e.message;
+          formKey.currentState.reset();
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    _errorMessage = "";
+    _isLoading = false;
+    _isLoginForm = true;
+    super.initState();
+  }
+
+  void resetForm() {
+    formKey.currentState.reset();
+    _errorMessage = "";
+  }
+
+  void toggleFormMode() {
+    resetForm();
+    setState(() {
+      _isLoginForm = !_isLoginForm;
+    });
+  }
+
+  // LoginPagePresenter _presenter;
+
+  // _LoginPageState() {
+  //   _presenter = new LoginPagePresenter(this);
+  // }
 
   void _register() {
     Navigator.of(context)
@@ -48,41 +145,30 @@ class _LoginPageState extends State<LoginScreen> implements LoginPageContract {
       return 'This is email not correct !';
     }
   }
-   Future<void> getType() async {
-     DatabaseHelper db = new DatabaseHelper();
-     User user = User(null, _email, _password, null, null);
-     List<Map> list = await db.selectUserType(user);
-     _type = list.map((e) => e['type'] as String).toString().replaceAll("(", "").replaceAll(")", "");
-  }
 
-   _submit()  {
-    final form = formKey.currentState;
-
-    if (form.validate()) {
-      setState(() {
-        _isLoading = true;
-        form.save();
-         getType();
-        _presenter.doLogin(_email, _password,_type);
-      });
-    }
-  }
-
-  void _showSnackBar(String text) {
-    scaffoldKey.currentState.showSnackBar(new SnackBar(
-      content: new Text(text),
-    ));
+  Future<void> getType() async {
+    // var results = await _api.getCollectionDocs();
+    // List<Map> users = results.documents.map((doc) => User.fromJson(doc.data,doc.documentID)).toList();
+    // _type = users.map((e) => e['type'] as String).toString().replaceAll("(", "").replaceAll(")", "");
+    // return users[0].type;
+    //  DatabaseHelper db = new DatabaseHelper();
+    //  User user = User(null, _email, _password, null, null);
+    //  List<Map> list = await db.selectUserType(user);
+    //  _type = list.map((e) => e['type'] as String).toString().replaceAll("(", "").replaceAll(")", "");
   }
 
   @override
   Widget build(BuildContext context) {
     _ctx = context;
+    final userProvider = Provider.of<CURDModel>(context);
+
     var loginBtn = new Center(
         child: Container(
             margin: EdgeInsets.only(top: 50.0),
             child: RaisedButton(
               onPressed: () {
-                _submit();
+                // _submit();
+                validateAndSubmit();
               }, // When Click on Button goto Login Screen
 
               shape: RoundedRectangleBorder(
@@ -230,15 +316,56 @@ class _LoginPageState extends State<LoginScreen> implements LoginPageContract {
     });
     if (user.flaglogged == "logged") {
       print("Logged");
-      if(_type == "merchant"){
+      if (_type == "merchant") {
+        Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => MershantHomeScreen()));
+      } else if (_type == "client") {
         Navigator.of(context)
-          .push(MaterialPageRoute(builder: (context) => MershantHomeScreen()));
-      }else if(_type == "client"){
-        Navigator.of(context)
-          .push(MaterialPageRoute(builder: (context) => Home()));
+            .push(MaterialPageRoute(builder: (context) => Home()));
       }
     } else {
       print("Not Logged");
     }
+  }
+  //  _submit()  {
+  //   final form = formKey.currentState;
+
+  //   if (form.validate()) {
+  //     setState(() {
+  //       _isLoading = true;
+  //       form.save();
+  //        //getType();
+  //       _presenter.doLogin(_email, _password,_type);
+  //     });
+  //   }
+  // }
+
+  void _showSnackBar(String text) {
+    scaffoldKey.currentState.showSnackBar(new SnackBar(
+      content: new Text(text),
+    ));
+  }
+
+  void _showDialog(String message) {
+    // flutter defined function
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Error"),
+          content: new Text(message),
+          actions: <Widget>[
+            // usually buttons at the bottom of the dialog
+            new FlatButton(
+              child: new Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

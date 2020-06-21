@@ -1,9 +1,23 @@
 class OrderData{
-  int id;
+  String id;
   String productName;
   String price;
   String clientName;
   String city;
+  OrderData.fromJson(Map<String,dynamic> map, String id):this.id = id ?? ''
+  ,this.productName = map['ProductName'],
+    this.price = map['Price'],
+    this.clientName = map['ClientName'],
+    this.city = map['City'];
+  toJson(){
+    return{
+      'id':id,
+      'ProductName':productName,
+      'Price':price,
+      'ClientName':clientName,
+      'City':city,
+    };
+  }
   static final getData = [
    {
      'ProductName': 'Puma Descendant Ind',
