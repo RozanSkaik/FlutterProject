@@ -10,22 +10,25 @@ import 'package:provider/provider.dart';
 
 class OrderDetails extends StatelessWidget {
   int index;
-  OrderDetails({Key key,this.index}) : super(key: key);
+  OrderDetails({Key key, this.index}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
     return ChangeNotifierProvider<OrderCart>(
       create: (context) => OrderCart(orderCount: 0),
-      child: MaterialApp(home: Order(index: index,)),
+      child: MaterialApp(
+          home: Order(
+        index: index,
+      )),
     );
   }
 }
 
 class Order extends StatelessWidget {
   int index;
-  Order({Key key,this.index}) : super(key: key);
+  Order({Key key, this.index}) : super(key: key);
   //var db = new DatabaseHelper();
-  
+
   @override
   Widget build(BuildContext context) {
     final ordersProvider = Provider.of<CURDModel>(context);
@@ -87,20 +90,29 @@ class Order extends StatelessWidget {
                 style: TextStyle(fontSize: 15, color: Colors.grey))),
         Container(
             margin: EdgeInsets.only(top: 5.0, left: 30.0, right: 30.0),
-            child: FutureBuilder(
-                future: ordersProvider.fetchOrders(),//db.getAllRecords()
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Container(
-                      margin: EdgeInsets.only(top: 5.0, right: 30.0),
-                      child: Text('${snapshot.data[index].row[3]}',
-                          style: TextStyle(fontSize: 16, color: Colors.black)),
-                    );
-                  } else
-                    return Center(
-                      child: CupertinoActivityIndicator(),
-                    );
-                })),
+            child: SizedBox(
+              child: StreamBuilder(
+                  stream:
+                      ordersProvider.fetchOrderAsStream(), //db.getAllRecords()
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      var orders = snapshot.data.documents
+                          .map((doc) =>
+                              OrderData.fromJson(doc.data, doc.documentID))
+                          .toList();
+                          
+                      return Container(
+                        margin: EdgeInsets.only(top: 5.0, right: 30.0),
+                        child: Text('${orders[index].clientName.toString()}',
+                            style:
+                                TextStyle(fontSize: 16, color: Colors.black)),
+                      );
+                    } else
+                      return Center(
+                        child: CupertinoActivityIndicator(),
+                      );
+                  }),
+            )),
         Container(
           height: 1,
           width: 340,
@@ -113,20 +125,27 @@ class Order extends StatelessWidget {
                 style: TextStyle(fontSize: 15, color: Colors.grey))),
         Container(
             margin: EdgeInsets.only(top: 5.0, left: 30.0, right: 30.0),
-            child: FutureBuilder(
-                future: ordersProvider.fetchOrders(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Container(
-                      margin: EdgeInsets.only(top: 5.0, right: 30.0),
-                      child: Text('${snapshot.data[index].row[4]}',
-                          style: TextStyle(fontSize: 16, color: Colors.black)),
-                    );
-                  } else
-                    return Center(
-                      child: CupertinoActivityIndicator(),
-                    );
-                })),
+            child: SizedBox(
+                  child: StreamBuilder(
+                  stream: ordersProvider.fetchOrderAsStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      var orders = snapshot.data.documents
+                          .map((doc) =>
+                              OrderData.fromJson(doc.data, doc.documentID))
+                          .toList();
+
+                      return Container(
+                        margin: EdgeInsets.only(top: 5.0, right: 30.0),
+                        child: Text('${orders[index].city.toString()}',
+                            style: TextStyle(fontSize: 16, color: Colors.black)),
+                      );
+                    } else
+                      return Center(
+                        child: CupertinoActivityIndicator(),
+                      );
+                  }),
+            )),
         Container(
           height: 1,
           width: 340,
@@ -139,20 +158,27 @@ class Order extends StatelessWidget {
                 style: TextStyle(fontSize: 15, color: Colors.grey))),
         Container(
             margin: EdgeInsets.only(top: 5.0, left: 30.0, right: 30.0),
-            child: FutureBuilder(
-                future: ordersProvider.fetchOrders(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Container(
-                      margin: EdgeInsets.only(top: 5.0, right: 30.0),
-                      child: Text('${snapshot.data[index].row[1]}',
-                          style: TextStyle(fontSize: 16, color: Colors.black)),
-                    );
-                  } else
-                    return Center(
-                      child: CupertinoActivityIndicator(),
-                    );
-                })),
+            child: SizedBox(
+                  child: StreamBuilder(
+                  stream: ordersProvider.fetchOrderAsStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      var orders = snapshot.data.documents
+                          .map((doc) =>
+                              OrderData.fromJson(doc.data, doc.documentID))
+                          .toList();
+
+                      return Container(
+                        margin: EdgeInsets.only(top: 5.0, right: 30.0),
+                        child: Text('${orders[index].productName.toString()}',
+                            style: TextStyle(fontSize: 16, color: Colors.black)),
+                      );
+                    } else
+                      return Center(
+                        child: CupertinoActivityIndicator(),
+                      );
+                  }),
+            )),
         Container(
           height: 1,
           width: 340,
@@ -164,7 +190,8 @@ class Order extends StatelessWidget {
                 margin: EdgeInsets.only(top: 30.0),
                 child: RaisedButton(
                   onPressed: () {
-                     Provider.of<OrderCart>(context,listen: false).increamentOrder();
+                    Provider.of<OrderCart>(context, listen: false)
+                        .increamentOrder();
                   }, // When Click on Button goto Login Screen
 
                   shape: RoundedRectangleBorder(
